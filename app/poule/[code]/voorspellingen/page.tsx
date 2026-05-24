@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getPoule, saveVoorspellingen } from "@/lib/api";
-import { getSessie } from "@/lib/storage";
+import { createClient } from "@/lib/supabase/client";
 import { wedstrijden, getGroepen } from "@/lib/matches";
 import { Voorspelling } from "@/lib/types";
 
@@ -20,7 +20,6 @@ function Stepper({
   onChange: (v: number) => void;
   color?: "green" | "orange";
 }) {
-  const ring = color === "green" ? "focus:ring-green-500" : "focus:ring-orange-500";
   const activeBg = color === "green" ? "bg-green-500" : "bg-orange-500";
   const hasValue = value !== null;
 
@@ -67,23 +66,32 @@ export default function VoorspellingenPagina() {
   const groepen = getGroepen();
 
   useEffect(() => {
-    const sessie = getSessie();
-    if (!sessie || sessie.code !== code) { router.push("/"); return; }
-    setDeelnemerid(sessie.deelnemerId);
-    deelnemerRef.current = sessie.deelnemerId;
+    async function load() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/"); return; }
 
-    getPoule(code).then((poule) => {
+      const poule = await getPoule(code);
       if (!poule) { router.push("/"); return; }
+
       setPoulenaam(poule.naam);
-      const deelnemer = poule.deelnemers.find((d) => d.id === sessie.deelnemerId);
-      if (deelnemer) {
-        const map: ScoreMap = {};
-        deelnemer.voorspellingen.forEach((v) => {
-          map[v.wedstrijdId] = { thuis: v.thuis, uit: v.uit };
-        });
-        setScores(map);
+
+      const deelnemer = poule.deelnemers.find((d) => d.userId === user.id);
+      if (!deelnemer) {
+        router.push(`/poule/${code}`);
+        return;
       }
-    });
+
+      setDeelnemerid(deelnemer.id);
+      deelnemerRef.current = deelnemer.id;
+
+      const map: ScoreMap = {};
+      deelnemer.voorspellingen.forEach((v) => {
+        map[v.wedstrijdId] = { thuis: v.thuis, uit: v.uit };
+      });
+      setScores(map);
+    }
+    load();
     setActieveGroep(groepen[0] ?? null);
   }, [code, router, groepen]);
 
@@ -119,7 +127,6 @@ export default function VoorspellingenPagina() {
           [kant]: waarde,
         },
       };
-      // Debounced auto-save
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => doAutoSave(updated), 700);
       return updated;
@@ -130,9 +137,16 @@ export default function VoorspellingenPagina() {
     (v) => v.thuis !== null && v.uit !== null
   ).length;
 
+  if (!deelnemerid) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-zinc-700 border-t-green-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      {/* Header */}
       <header className="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link
@@ -151,11 +165,10 @@ export default function VoorspellingenPagina() {
           <div className="w-20 text-right text-xs">
             {saveStatus === "saving" && <span className="text-zinc-400">Opslaan...</span>}
             {saveStatus === "saved" && <span className="text-green-400 font-medium">✓ Opgeslagen</span>}
-            {saveStatus === "error" && <span className="text-red-400 font-medium">Mislukt — maak opnieuw aan</span>}
+            {saveStatus === "error" && <span className="text-red-400 font-medium">Fout — probeer opnieuw</span>}
           </div>
         </div>
 
-        {/* Voortgangsbalk */}
         <div className="h-0.5 bg-zinc-800">
           <div
             className="h-0.5 bg-green-500 transition-all duration-500"
@@ -163,7 +176,6 @@ export default function VoorspellingenPagina() {
           />
         </div>
 
-        {/* Groep tabs */}
         <div className="max-w-2xl mx-auto px-4 flex gap-1 overflow-x-auto py-2">
           {groepen.map((g) => {
             const letter = g.replace("Groep ", "");
@@ -227,7 +239,6 @@ export default function VoorspellingenPagina() {
                       key={w.id}
                       className={`px-5 py-5 transition-colors ${heeftBeide ? "bg-zinc-800/30" : ""}`}
                     >
-                      {/* Datum */}
                       <p className="text-xs text-zinc-600 text-center mb-4">
                         {new Date(w.datum).toLocaleDateString("nl-NL", {
                           weekday: "long",
@@ -237,15 +248,12 @@ export default function VoorspellingenPagina() {
                         · {w.tijd}
                       </p>
 
-                      {/* Match row */}
                       <div className="flex items-center justify-between gap-3">
-                        {/* Thuisploeg */}
                         <div className="flex-1 text-right">
                           <div className="text-2xl mb-1">{w.thuis.vlag}</div>
                           <div className="text-sm font-semibold text-white leading-tight">{w.thuis.naam}</div>
                         </div>
 
-                        {/* Steppers */}
                         <div className="flex items-center gap-3 px-2">
                           <Stepper
                             value={vp?.thuis ?? null}
@@ -260,7 +268,6 @@ export default function VoorspellingenPagina() {
                           />
                         </div>
 
-                        {/* Uitploeg */}
                         <div className="flex-1 text-left">
                           <div className="text-2xl mb-1">{w.uit.vlag}</div>
                           <div className="text-sm font-semibold text-white leading-tight">{w.uit.naam}</div>

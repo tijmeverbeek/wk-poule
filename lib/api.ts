@@ -1,13 +1,10 @@
 import { Poule, Voorspelling } from "./types";
 
-export async function createPoule(
-  naam: string,
-  deelnemerNaam: string
-): Promise<{ code: string; deelnemerId: string }> {
+export async function createPoule(naam: string): Promise<{ code: string; deelnemerId: string }> {
   const res = await fetch("/api/poules", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ naam, deelnemerNaam }),
+    body: JSON.stringify({ naam }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -16,14 +13,11 @@ export async function createPoule(
   return res.json();
 }
 
-export async function joinPoule(
-  code: string,
-  naam: string
-): Promise<{ deelnemerId: string } | null> {
+export async function joinPoule(code: string): Promise<{ deelnemerId: string } | null> {
   const res = await fetch(`/api/poules/${code}/deelnemers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ naam }),
+    body: JSON.stringify({}),
   });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error("Deelnemen mislukt");

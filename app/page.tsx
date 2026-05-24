@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createPoule, joinPoule } from "@/lib/api";
-import { saveSessie } from "@/lib/storage";
+import { createClient } from "@/lib/supabase/client";
+import { wedstrijden } from "@/lib/matches";
 
 function SteelBallsLogo({ size = 140 }: { size?: number }) {
   return (
@@ -47,18 +49,10 @@ function SteelBallsLogo({ size = 140 }: { size?: number }) {
           </feMerge>
         </filter>
       </defs>
-
-      {/* Ground shadow */}
       <ellipse cx="80" cy="138" rx="58" ry="7" fill="rgba(0,0,0,0.35)" />
-
-      {/* Bottom-left ball */}
       <circle cx="43" cy="100" r="33" fill="url(#s1)" filter="url(#sh)" />
-      {/* Bottom-right ball */}
       <circle cx="117" cy="100" r="33" fill="url(#s2)" filter="url(#sh)" />
-      {/* Top ball */}
       <circle cx="80" cy="44" r="33" fill="url(#s3)" filter="url(#sh)" />
-
-      {/* Specular highlights */}
       <ellipse cx="67" cy="32" rx="11" ry="7" fill="rgba(255,255,255,0.72)" transform="rotate(-22 67 32)" />
       <ellipse cx="30" cy="89" rx="11" ry="7" fill="rgba(255,255,255,0.65)" transform="rotate(-22 30 89)" />
       <ellipse cx="104" cy="89" rx="11" ry="7" fill="rgba(255,255,255,0.65)" transform="rotate(-22 104 89)" />
@@ -66,42 +60,72 @@ function SteelBallsLogo({ size = 140 }: { size?: number }) {
   );
 }
 
+interface UserPoule {
+  id: string;
+  naam: string;
+  code: string;
+  deelnemerId: string;
+  ingevuld: number;
+  aangemaaktOp: string;
+}
+
 export default function Home() {
   const router = useRouter();
-  const [createForm, setCreateForm] = useState({ naam: "", poulenaam: "" });
-  const [joinForm, setJoinForm] = useState({ naam: "", code: "" });
+  const [gebruikersnaam, setGebruikersnaam] = useState<string | null>(null);
+  const [mijnPoules, setMijnPoules] = useState<UserPoule[] | null>(null);
+  const [poulenaam, setPoulenaam] = useState("");
+  const [joinCode, setJoinCode] = useState("");
   const [joinError, setJoinError] = useState("");
   const [loading, setLoading] = useState<"create" | "join" | null>(null);
   const [createError, setCreateError] = useState("");
 
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const [userRes, poulesRes] = await Promise.all([
+        fetch("/api/user"),
+        fetch("/api/user/poules"),
+      ]);
+      if (userRes.ok) {
+        const u = await userRes.json();
+        setGebruikersnaam(u?.gebruikersnaam ?? null);
+      }
+      if (poulesRes.ok) {
+        setMijnPoules(await poulesRes.json());
+      }
+    }
+    load();
+  }, []);
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!createForm.naam.trim() || !createForm.poulenaam.trim()) return;
+    if (!poulenaam.trim()) return;
     setLoading("create");
     setCreateError("");
     try {
-      const { code, deelnemerId } = await createPoule(createForm.poulenaam.trim(), createForm.naam.trim());
-      saveSessie({ code, deelnemerId });
+      const { code } = await createPoule(poulenaam.trim());
       router.push(`/poule/${code}`);
     } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Er ging iets mis. Probeer het opnieuw.");
+      setCreateError(err instanceof Error ? err.message : "Er ging iets mis.");
       setLoading(null);
     }
   }
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
-    if (!joinForm.naam.trim() || !joinForm.code.trim()) return;
+    if (!joinCode.trim()) return;
     setLoading("join");
-    const code = joinForm.code.trim().toUpperCase();
+    const code = joinCode.trim().toUpperCase();
     try {
-      const result = await joinPoule(code, joinForm.naam.trim());
+      const result = await joinPoule(code);
       if (!result) {
-        setJoinError("Poule niet gevonden. Controleer de code en probeer opnieuw.");
+        setJoinError("Poule niet gevonden. Controleer de code.");
         setLoading(null);
         return;
       }
-      saveSessie({ code, deelnemerId: result.deelnemerId });
       router.push(`/poule/${code}`);
     } catch {
       setJoinError("Er ging iets mis. Probeer het opnieuw.");
@@ -109,36 +133,32 @@ export default function Home() {
     }
   }
 
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
+  const aantalWedstrijden = wedstrijden.length;
+
   return (
     <div className="min-h-screen flex flex-col bg-zinc-950 text-white">
 
-      {/* ── Hero ── */}
+      {/* ── Header ── */}
       <header className="relative overflow-hidden">
-        {/* Achtergrond radial glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,222,128,0.08) 0%, transparent 70%)",
+            background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(74,222,128,0.08) 0%, transparent 70%)",
           }}
         />
-
-        <div className="relative max-w-3xl mx-auto px-6 pt-20 pb-16 text-center">
-          <div className="flex justify-center mb-6">
-            <SteelBallsLogo size={148} />
+        <div className="relative max-w-3xl mx-auto px-6 pt-16 pb-12 text-center">
+          <div className="flex justify-center mb-5">
+            <SteelBallsLogo size={120} />
           </div>
-
-          <h1 className="text-6xl font-black tracking-tight mb-4 text-white">
-            STEELBALLS
-          </h1>
-
-          <p className="text-2xl font-semibold text-zinc-200 mb-2">
-            Strijd met je vrienden.
-          </p>
-          <p className="text-lg text-zinc-400 mb-8">
-            Kom erachter wie de staalste ballen heeft.
-          </p>
-
+          <h1 className="text-5xl font-black tracking-tight mb-3 text-white">STEELBALLS</h1>
+          <p className="text-xl font-semibold text-zinc-200 mb-1">Strijd met je vrienden.</p>
+          <p className="text-base text-zinc-400 mb-6">Kom erachter wie de staalste ballen heeft.</p>
           <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-5 py-2 text-sm text-zinc-400">
             <span className="text-green-400 font-medium">⚽ WK 2026</span>
             <span className="text-zinc-600">·</span>
@@ -149,150 +169,157 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ── Actiekaarten ── */}
-      <main className="flex-1">
-        <div className="max-w-4xl mx-auto px-6 py-12">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-6 pb-12 space-y-8">
 
-          <div className="grid md:grid-cols-2 gap-6">
-
-            {/* Poule aanmaken */}
-            <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
-              <div className="px-8 pt-7 pb-4">
-                <div className="text-xs font-semibold uppercase tracking-widest text-green-400 mb-2">
-                  Nieuwe poule
-                </div>
-                <h2 className="text-2xl font-bold text-white">Maak een poule</h2>
-                <p className="text-zinc-400 text-sm mt-1">
-                  Stel jouw poule in en deel de code met je vrienden.
-                </p>
-              </div>
-              <form onSubmit={handleCreate} className="px-8 pb-8 pt-2 space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
-                    Jouw naam
-                  </label>
-                  <input
-                    type="text"
-                    value={createForm.naam}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, naam: e.target.value }))}
-                    placeholder="Bijv. Sander"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
-                    Naam van de poule
-                  </label>
-                  <input
-                    type="text"
-                    value={createForm.poulenaam}
-                    onChange={(e) => setCreateForm((f) => ({ ...f, poulenaam: e.target.value }))}
-                    placeholder="Bijv. De Harde Kern 2026"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading === "create"}
-                  className="w-full bg-green-500 hover:bg-green-400 disabled:opacity-50 text-black font-bold py-3 rounded-xl transition-colors text-sm tracking-wide"
-                >
-                  {loading === "create" ? "Aanmaken..." : "Maak poule aan →"}
-                </button>
-                {createError && <p className="text-red-400 text-xs mt-3">{createError}</p>}
-              </form>
-            </div>
-
-            {/* Poule joinen */}
-            <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
-              <div className="px-8 pt-7 pb-4">
-                <div className="text-xs font-semibold uppercase tracking-widest text-orange-400 mb-2">
-                  Uitgenodigd?
-                </div>
-                <h2 className="text-2xl font-bold text-white">Doe mee</h2>
-                <p className="text-zinc-400 text-sm mt-1">
-                  Voer de poule code in die je hebt ontvangen.
-                </p>
-              </div>
-              <form onSubmit={handleJoin} className="px-8 pb-8 pt-2 space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
-                    Jouw naam
-                  </label>
-                  <input
-                    type="text"
-                    value={joinForm.naam}
-                    onChange={(e) => setJoinForm((f) => ({ ...f, naam: e.target.value }))}
-                    placeholder="Bijv. Emma"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
-                    Poule code
-                  </label>
-                  <input
-                    type="text"
-                    value={joinForm.code}
-                    onChange={(e) => {
-                      setJoinForm((f) => ({ ...f, code: e.target.value }));
-                      setJoinError("");
-                    }}
-                    placeholder="ABC123"
-                    maxLength={6}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 uppercase tracking-[0.25em] font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    required
-                  />
-                  {joinError && <p className="text-red-400 text-xs mt-1.5">{joinError}</p>}
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading === "join"}
-                  className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-black font-bold py-3 rounded-xl transition-colors text-sm tracking-wide"
-                >
-                  {loading === "join" ? "Deelnemen..." : "Doe mee →"}
-                </button>
-              </form>
-            </div>
-          </div>
-
-          {/* Hoe werkt het */}
-          <div className="mt-16">
-            <p className="text-center text-xs font-semibold uppercase tracking-widest text-zinc-600 mb-8">
-              Hoe werkt het?
+        {/* ── Topbar met gebruiker ── */}
+        <div className="flex items-center justify-between pt-2">
+          {gebruikersnaam ? (
+            <p className="text-sm text-zinc-500">
+              Ingelogd als <span className="text-white font-medium">{gebruikersnaam}</span>
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[
-                {
-                  nr: "01",
-                  titel: "Maak een poule",
-                  tekst: "Maak een poule aan, geef hem een naam en deel de code met je vrienden.",
-                },
-                {
-                  nr: "02",
-                  titel: "Vul je voorspellingen in",
-                  tekst: "Iedereen voorspelt de uitslag van elke WK wedstrijd vóór de aftrap.",
-                },
-                {
-                  nr: "03",
-                  titel: "Bewijs je hebt stalen ballen",
-                  tekst: "Exacte score = 3 pt · Juiste uitslag = 1 pt · Wie wint de poule?",
-                },
-              ].map(({ nr, titel, tekst }) => (
-                <div key={nr} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                  <div className="text-3xl font-black text-zinc-800 mb-3">{nr}</div>
-                  <div className="font-bold text-white mb-1.5 text-sm">{titel}</div>
-                  <div className="text-xs text-zinc-500 leading-relaxed">{tekst}</div>
-                </div>
+          ) : (
+            <div />
+          )}
+          <button
+            onClick={handleLogout}
+            className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+          >
+            Uitloggen
+          </button>
+        </div>
+
+        {/* ── Jouw poules ── */}
+        {mijnPoules !== null && mijnPoules.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">
+              Jouw poules
+            </p>
+            <div className="space-y-3">
+              {mijnPoules.map((p) => (
+                <Link
+                  key={p.id}
+                  href={`/poule/${p.code}`}
+                  className="block bg-zinc-900 border border-zinc-800 rounded-2xl px-5 py-4 hover:border-zinc-600 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-bold text-white">{p.naam}</p>
+                    <span className="text-xs font-mono text-zinc-500">{p.code}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full">
+                      <div
+                        className="h-1.5 bg-green-500 rounded-full transition-all"
+                        style={{ width: `${(p.ingevuld / aantalWedstrijden) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-zinc-500">{p.ingevuld}/{aantalWedstrijden} voorspeld</span>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
+        )}
+
+        {/* ── Acties ── */}
+        <div className="grid md:grid-cols-2 gap-5">
+
+          {/* Poule aanmaken */}
+          <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
+            <div className="px-7 pt-6 pb-3">
+              <div className="text-xs font-semibold uppercase tracking-widest text-green-400 mb-1.5">
+                Nieuwe poule
+              </div>
+              <h2 className="text-xl font-bold text-white">Maak een poule</h2>
+              <p className="text-zinc-400 text-sm mt-1">
+                Geef je poule een naam en nodig vrienden uit.
+              </p>
+            </div>
+            <form onSubmit={handleCreate} className="px-7 pb-7 pt-2 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
+                  Naam van de poule
+                </label>
+                <input
+                  type="text"
+                  value={poulenaam}
+                  onChange={(e) => setPoulenaam(e.target.value)}
+                  placeholder="Bijv. De Harde Kern 2026"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading === "create"}
+                className="w-full bg-green-500 hover:bg-green-400 disabled:opacity-50 text-black font-bold py-3 rounded-xl transition-colors text-sm"
+              >
+                {loading === "create" ? "Aanmaken..." : "Maak poule aan →"}
+              </button>
+              {createError && <p className="text-red-400 text-xs">{createError}</p>}
+            </form>
+          </div>
+
+          {/* Poule joinen */}
+          <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
+            <div className="px-7 pt-6 pb-3">
+              <div className="text-xs font-semibold uppercase tracking-widest text-orange-400 mb-1.5">
+                Uitgenodigd?
+              </div>
+              <h2 className="text-xl font-bold text-white">Doe mee</h2>
+              <p className="text-zinc-400 text-sm mt-1">
+                Voer de poule code in die je hebt ontvangen.
+              </p>
+            </div>
+            <form onSubmit={handleJoin} className="px-7 pb-7 pt-2 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
+                  Poule code
+                </label>
+                <input
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => { setJoinCode(e.target.value); setJoinError(""); }}
+                  placeholder="ABC123"
+                  maxLength={6}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 uppercase tracking-[0.25em] font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                />
+                {joinError && <p className="text-red-400 text-xs mt-1">{joinError}</p>}
+              </div>
+              <button
+                type="submit"
+                disabled={loading === "join"}
+                className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-50 text-black font-bold py-3 rounded-xl transition-colors text-sm"
+              >
+                {loading === "join" ? "Deelnemen..." : "Doe mee →"}
+              </button>
+            </form>
+          </div>
         </div>
+
+        {/* Hoe werkt het */}
+        <div>
+          <p className="text-center text-xs font-semibold uppercase tracking-widest text-zinc-700 mb-6">
+            Hoe werkt het?
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { nr: "01", titel: "Maak een poule", tekst: "Maak een poule aan en deel de uitnodigingslink met je vrienden." },
+              { nr: "02", titel: "Voorspel de uitslagen", tekst: "Iedereen voorspelt de uitslag van elke WK wedstrijd vóór de aftrap." },
+              { nr: "03", titel: "Wie heeft stalen ballen?", tekst: "Exacte score = 3 pt · Juiste uitslag = 1 pt · Wie wint de poule?" },
+            ].map(({ nr, titel, tekst }) => (
+              <div key={nr} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+                <div className="text-3xl font-black text-zinc-800 mb-2">{nr}</div>
+                <div className="font-bold text-white mb-1 text-sm">{titel}</div>
+                <div className="text-xs text-zinc-500 leading-relaxed">{tekst}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </main>
 
-      <footer className="text-center text-xs text-zinc-700 py-8 border-t border-zinc-900">
+      <footer className="text-center text-xs text-zinc-700 py-6 border-t border-zinc-900">
         Steelballs · FIFA World Cup 2026 · USA · Canada · Mexico
       </footer>
     </div>

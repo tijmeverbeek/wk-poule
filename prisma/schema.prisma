@@ -8,6 +8,14 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id             String      @id
+  email          String      @unique
+  gebruikersnaam String?     @unique
+  aangemaaktOp   DateTime    @default(now())
+  deelnemers     Deelnemer[]
+}
+
 model Poule {
   id           String      @id @default(cuid())
   naam         String
@@ -18,10 +26,13 @@ model Poule {
 
 model Deelnemer {
   id             String         @id @default(cuid())
-  naam           String
+  userId         String
+  user           User           @relation(fields: [userId], references: [id])
   pouleId        String
   poule          Poule          @relation(fields: [pouleId], references: [id])
   voorspellingen Voorspelling[]
+
+  @@unique([userId, pouleId])
 }
 
 model Voorspelling {

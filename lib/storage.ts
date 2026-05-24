@@ -1,23 +1,4 @@
-import { Voorspelling, Sessie } from "./types";
-
-const SESSIE_KEY = "wk_sessie";
-
-export function getSessie(): Sessie | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return JSON.parse(localStorage.getItem(SESSIE_KEY) ?? "null");
-  } catch {
-    return null;
-  }
-}
-
-export function saveSessie(sessie: Sessie): void {
-  localStorage.setItem(SESSIE_KEY, JSON.stringify(sessie));
-}
-
-export function clearSessie(): void {
-  localStorage.removeItem(SESSIE_KEY);
-}
+import { Voorspelling } from "./types";
 
 // Exacte score: 3 punten, juiste uitslag (W/G/V): 1 punt
 export function berekenPunten(

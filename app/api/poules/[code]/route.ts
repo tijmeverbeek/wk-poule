@@ -8,7 +8,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ code: s
     where: { code },
     include: {
       deelnemers: {
-        include: { voorspellingen: true },
+        include: {
+          voorspellingen: true,
+          user: { select: { gebruikersnaam: true, email: true } },
+        },
       },
     },
   });

@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getPoule } from "@/lib/api";
-import { getSessie, berekenPunten } from "@/lib/storage";
+import { berekenPunten } from "@/lib/storage";
 import { wedstrijden } from "@/lib/matches";
+import { createClient } from "@/lib/supabase/client";
 import { Poule } from "@/lib/types";
 
 const MEDAILLES = ["🥇", "🥈", "🥉"];
@@ -22,16 +23,22 @@ function Initialen({ naam }: { naam: string }) {
   );
 }
 
+function deelnemerNaam(d: { user: { gebruikersnaam: string | null; email: string } }) {
+  return d.user.gebruikersnaam ?? d.user.email.split("@")[0];
+}
+
 export default function PoulePagina() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const [poule, setPoule] = useState<Poule | null>(null);
-  const [sessie, setSessie] = useState<{ code: string; deelnemerId: string } | null>(null);
+  const [mijnUserId, setMijnUserId] = useState<string | null>(null);
   const [gedeeld, setGedeeld] = useState(false);
 
   useEffect(() => {
-    const s = getSessie();
-    setSessie(s);
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setMijnUserId(user.id);
+    });
     getPoule(code).then((p) => {
       if (!p) { router.push("/"); return; }
       setPoule(p);
@@ -48,7 +55,7 @@ export default function PoulePagina() {
           url,
         });
       } catch {
-        // Gebruiker annuleerde
+        // cancelled
       }
     } else {
       await navigator.clipboard.writeText(url);
@@ -65,13 +72,14 @@ export default function PoulePagina() {
     );
   }
 
-  const huidigDeelnemer = poule.deelnemers.find((d) => d.id === sessie?.deelnemerId);
+  const huidigDeelnemer = poule.deelnemers.find((d) => d.userId === mijnUserId);
   const aantalWedstrijden = wedstrijden.length;
   const jouwIngevuld = huidigDeelnemer?.voorspellingen.filter((v) => v.thuis !== null && v.uit !== null).length ?? 0;
 
   const stand = poule.deelnemers
     .map((d) => ({
       ...d,
+      displayNaam: deelnemerNaam(d),
       punten: berekenPunten(d.voorspellingen, poule.resultaten),
       ingevuld: d.voorspellingen.filter((v) => v.thuis !== null && v.uit !== null).length,
     }))
@@ -82,7 +90,6 @@ export default function PoulePagina() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
 
-      {/* ── Header ── */}
       <header className="bg-zinc-900 border-b border-zinc-800">
         <div className="max-w-2xl mx-auto px-5 py-5">
           <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300 font-medium transition-colors">
@@ -99,7 +106,7 @@ export default function PoulePagina() {
               onClick={deelUitnodiging}
               className="flex-shrink-0 flex items-center gap-2 bg-green-500 hover:bg-green-400 text-black font-bold text-sm px-4 py-2.5 rounded-xl transition-colors"
             >
-              {gedeeld ? "✓ Link gekopieerd!" : (
+              {gedeeld ? "✓ Gekopieerd!" : (
                 <>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
@@ -151,16 +158,16 @@ export default function PoulePagina() {
             {stand.map((d, i) => (
               <div
                 key={d.id}
-                className={`px-5 py-4 flex items-center gap-3 ${d.id === sessie?.deelnemerId ? "bg-zinc-800/50" : ""}`}
+                className={`px-5 py-4 flex items-center gap-3 ${d.userId === mijnUserId ? "bg-zinc-800/50" : ""}`}
               >
                 <span className="text-lg w-7 text-center flex-shrink-0">
                   {i < 3 ? MEDAILLES[i] : <span className="text-sm text-zinc-600 font-bold">{i + 1}</span>}
                 </span>
-                <Initialen naam={d.naam} />
+                <Initialen naam={d.displayNaam} />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white text-sm truncate">
-                    {d.naam}
-                    {d.id === sessie?.deelnemerId && (
+                    {d.displayNaam}
+                    {d.userId === mijnUserId && (
                       <span className="ml-1.5 text-xs text-green-400 font-normal">jij</span>
                     )}
                   </p>
@@ -190,11 +197,11 @@ export default function PoulePagina() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
           <h2 className="font-bold text-white mb-1">Vrienden uitnodigen</h2>
           <p className="text-sm text-zinc-500 mb-4">
-            Deel de link of code — iedereen kan meedoen via de uitnodiging.
+            Deel de link — iedereen kan meedoen via de uitnodiging.
           </p>
           <div className="flex gap-3">
-            <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 font-mono text-sm text-zinc-300 tracking-widest">
-              {`/join/${code}`}
+            <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 font-mono text-sm text-zinc-300 tracking-widest truncate">
+              {typeof window !== "undefined" ? `${window.location.origin}/join/${code}` : `/join/${code}`}
             </div>
             <button
               onClick={deelUitnodiging}
@@ -205,7 +212,7 @@ export default function PoulePagina() {
           </div>
         </div>
 
-        {/* ── Eerstvolgende wedstrijden ── */}
+        {/* ── Eerste wedstrijden ── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
             <h2 className="font-bold text-white">Eerste wedstrijden</h2>
@@ -220,7 +227,9 @@ export default function PoulePagina() {
               return (
                 <div key={w.id} className="px-5 py-3.5 flex items-center gap-3">
                   <div className="flex-1">
-                    <p className="text-xs text-zinc-600 mb-1">{w.groep} · {new Date(w.datum).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} {w.tijd}</p>
+                    <p className="text-xs text-zinc-600 mb-1">
+                      {w.groep} · {new Date(w.datum).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} {w.tijd}
+                    </p>
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-white">
                       <span>{w.thuis.vlag}</span>
                       <span>{w.thuis.naam}</span>

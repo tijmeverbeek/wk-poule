@@ -4,42 +4,28 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getPoule, joinPoule } from "@/lib/api";
-import { getSessie, saveSessie } from "@/lib/storage";
 
 export default function JoinPagina() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const [poulenaam, setPoulenaam] = useState<string | null>(null);
-  const [naam, setNaam] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    // Al ingelogd in deze poule? Ga direct door.
-    const sessie = getSessie();
-    if (sessie?.code === code) {
-      router.push(`/poule/${code}`);
-      return;
-    }
     getPoule(code).then((p) => {
       if (!p) { setNotFound(true); return; }
       setPoulenaam(p.naam);
     });
-  }, [code, router]);
+  }, [code]);
 
-  async function handleJoin(e: React.FormEvent) {
-    e.preventDefault();
-    if (!naam.trim()) return;
+  async function handleJoin() {
     setLoading(true);
-    setError("");
     try {
-      const result = await joinPoule(code, naam.trim());
-      if (!result) { setError("Poule niet gevonden."); setLoading(false); return; }
-      saveSessie({ code, deelnemerId: result.deelnemerId });
+      const result = await joinPoule(code);
+      if (!result) { setNotFound(true); return; }
       router.push(`/poule/${code}`);
     } catch {
-      setError("Er ging iets mis. Probeer het opnieuw.");
       setLoading(false);
     }
   }
@@ -70,7 +56,6 @@ export default function JoinPagina() {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-black text-white tracking-tight">
             STEELBALLS
@@ -79,40 +64,22 @@ export default function JoinPagina() {
         </div>
 
         <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
-          <div className="px-7 pt-7 pb-4">
+          <div className="px-7 pt-7 pb-5">
             <p className="text-xs font-semibold uppercase tracking-widest text-green-400 mb-1">
               Je bent uitgenodigd
             </p>
             <h1 className="text-2xl font-bold text-white">{poulenaam}</h1>
-            <p className="text-zinc-400 text-sm mt-1">
-              Vul je naam in om mee te doen.
+            <p className="text-zinc-400 text-sm mt-1 mb-6">
+              Doe mee en voorspel alle WK wedstrijden.
             </p>
-          </div>
-
-          <form onSubmit={handleJoin} className="px-7 pb-7 pt-3 space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1.5 uppercase tracking-wide">
-                Jouw naam
-              </label>
-              <input
-                type="text"
-                value={naam}
-                onChange={(e) => setNaam(e.target.value)}
-                placeholder="Bijv. Emma"
-                autoFocus
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                required
-              />
-              {error && <p className="text-red-400 text-xs mt-1.5">{error}</p>}
-            </div>
             <button
-              type="submit"
+              onClick={handleJoin}
               disabled={loading}
               className="w-full bg-green-500 hover:bg-green-400 disabled:opacity-50 text-black font-bold py-3 rounded-xl transition-colors text-sm"
             >
               {loading ? "Deelnemen..." : "Doe mee aan de poule →"}
             </button>
-          </form>
+          </div>
         </div>
       </div>
     </div>

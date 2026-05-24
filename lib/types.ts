@@ -22,7 +22,8 @@ export interface Voorspelling {
 
 export interface Deelnemer {
   id: string;
-  naam: string;
+  userId: string;
+  user: { gebruikersnaam: string | null; email: string };
   voorspellingen: Voorspelling[];
 }
 
@@ -33,9 +34,4 @@ export interface Poule {
   deelnemers: Deelnemer[];
   aangemaaktOp: string;
   resultaten: Record<string, { thuis: number; uit: number }>;
-}
-
-export interface Sessie {
-  code: string;
-  deelnemerId: string;
 }
