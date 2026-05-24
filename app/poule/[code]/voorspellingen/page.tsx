@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getPoule, saveVoorspellingen } from "@/lib/api";
@@ -63,7 +63,7 @@ export default function VoorspellingenPagina() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deelnemerRef = useRef<string | null>(null);
   const refs = useRef<Record<string, HTMLDivElement | null>>({});
-  const groepen = getGroepen();
+  const groepen = useMemo(() => getGroepen(), []);
 
   useEffect(() => {
     async function load() {
