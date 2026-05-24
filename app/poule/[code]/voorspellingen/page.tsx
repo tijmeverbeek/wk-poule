@@ -9,7 +9,7 @@ import { wedstrijden, getGroepen } from "@/lib/matches";
 import { Voorspelling } from "@/lib/types";
 
 type ScoreMap = Record<string, { thuis: number | null; uit: number | null }>;
-type SaveStatus = "idle" | "saving" | "saved";
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 function Stepper({
   value,
@@ -102,7 +102,8 @@ export default function VoorspellingenPagina() {
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
       } catch {
-        setSaveStatus("idle");
+        setSaveStatus("error");
+        setTimeout(() => setSaveStatus("idle"), 3000);
       }
     },
     [code]
@@ -150,6 +151,7 @@ export default function VoorspellingenPagina() {
           <div className="w-20 text-right text-xs">
             {saveStatus === "saving" && <span className="text-zinc-400">Opslaan...</span>}
             {saveStatus === "saved" && <span className="text-green-400 font-medium">✓ Opgeslagen</span>}
+            {saveStatus === "error" && <span className="text-red-400 font-medium">Mislukt — maak opnieuw aan</span>}
           </div>
         </div>
 
