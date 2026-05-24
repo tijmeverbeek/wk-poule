@@ -4,7 +4,7 @@ import { Component, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getPoule } from "@/lib/api";
-import { berekenPunten } from "@/lib/storage";
+import { berekenDeelnemerStats } from "@/lib/storage";
 import { wedstrijden } from "@/lib/matches";
 import { createClient } from "@/lib/supabase/client";
 import { Poule } from "@/lib/types";
@@ -112,8 +112,7 @@ function PoulePagina() {
     .map((d) => ({
       ...d,
       displayNaam: deelnemerNaam(d),
-      punten: berekenPunten(d.voorspellingen, poule.resultaten),
-      ingevuld: d.voorspellingen.filter((v) => v.thuis !== null && v.uit !== null).length,
+      ...berekenDeelnemerStats(d, poule.resultaten, wedstrijden),
     }))
     .sort((a, b) => b.punten - a.punten || b.ingevuld - a.ingevuld);
 
@@ -197,20 +196,31 @@ function PoulePagina() {
                 </span>
                 <Initialen naam={d.displayNaam} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white text-sm truncate">
-                    {d.displayNaam}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="font-semibold text-white text-sm truncate">
+                      {d.displayNaam}
+                    </p>
                     {d.userId === mijnUserId && (
-                      <span className="ml-1.5 text-xs text-green-400 font-normal">jij</span>
+                      <span className="text-xs text-green-400 font-normal">jij</span>
                     )}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="h-1 w-24 bg-zinc-700 rounded-full">
+                    {d.lateInstapper && (
+                      <span className="text-xs text-amber-500 font-normal">laat ingestapt</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <div className="h-1 w-20 bg-zinc-700 rounded-full flex-shrink-0">
                       <div
                         className="h-1 bg-zinc-400 rounded-full"
                         style={{ width: `${(d.ingevuld / aantalWedstrijden) * 100}%` }}
                       />
                     </div>
                     <span className="text-xs text-zinc-600">{d.ingevuld}/{aantalWedstrijden}</span>
+                    {d.aantalGemist > 0 && (
+                      <span className="text-xs text-red-500 font-medium">{d.aantalGemist} gemist</span>
+                    )}
+                    {d.aantalVoorInschrijving > 0 && (
+                      <span className="text-xs text-amber-600">{d.aantalVoorInschrijving} voor inschrijving</span>
+                    )}
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">

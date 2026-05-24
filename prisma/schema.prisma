@@ -31,6 +31,7 @@ model Deelnemer {
   pouleId        String
   poule          Poule          @relation(fields: [pouleId], references: [id])
   voorspellingen Voorspelling[]
+  aangemaaktOp   DateTime       @default(now())
 
   @@unique([userId, pouleId])
 }

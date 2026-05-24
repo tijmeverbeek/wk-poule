@@ -23,6 +23,7 @@ export interface Voorspelling {
 export interface Deelnemer {
   id: string;
   userId: string;
+  aangemaaktOp: string;
   user: { gebruikersnaam: string | null; email: string };
   voorspellingen: Voorspelling[];
 }
