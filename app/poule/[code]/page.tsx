@@ -6,14 +6,28 @@ import Link from "next/link";
 import { getPoule } from "@/lib/api";
 import { getSessie, berekenPunten } from "@/lib/storage";
 import { wedstrijden } from "@/lib/matches";
-import { Poule, Deelnemer } from "@/lib/types";
+import { Poule } from "@/lib/types";
+
+const MEDAILLES = ["🥇", "🥈", "🥉"];
+
+function Initialen({ naam }: { naam: string }) {
+  const parts = naam.trim().split(" ");
+  const letters = parts.length >= 2
+    ? parts[0][0] + parts[parts.length - 1][0]
+    : naam.slice(0, 2);
+  return (
+    <div className="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-300 uppercase flex-shrink-0">
+      {letters}
+    </div>
+  );
+}
 
 export default function PoulePagina() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const [poule, setPoule] = useState<Poule | null>(null);
   const [sessie, setSessie] = useState<{ code: string; deelnemerId: string } | null>(null);
-  const [gekopieerd, setGekopieerd] = useState(false);
+  const [gedeeld, setGedeeld] = useState(false);
 
   useEffect(() => {
     const s = getSessie();
@@ -24,16 +38,36 @@ export default function PoulePagina() {
     });
   }, [code, router]);
 
-  function kopieerCode() {
-    navigator.clipboard.writeText(code);
-    setGekopieerd(true);
-    setTimeout(() => setGekopieerd(false), 2000);
+  async function deelUitnodiging() {
+    const url = `${window.location.origin}/join/${code}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${poule?.naam} — Steelballs`,
+          text: `Doe mee aan de WK poule "${poule?.naam}"! Voorspel alle wedstrijden en bewijs wie de staalste ballen heeft.`,
+          url,
+        });
+      } catch {
+        // Gebruiker annuleerde
+      }
+    } else {
+      await navigator.clipboard.writeText(url);
+      setGedeeld(true);
+      setTimeout(() => setGedeeld(false), 2500);
+    }
   }
 
-  if (!poule) return null;
+  if (!poule) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-zinc-700 border-t-green-400 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const huidigDeelnemer = poule.deelnemers.find((d) => d.id === sessie?.deelnemerId);
   const aantalWedstrijden = wedstrijden.length;
+  const jouwIngevuld = huidigDeelnemer?.voorspellingen.filter((v) => v.thuis !== null && v.uit !== null).length ?? 0;
 
   const stand = poule.deelnemers
     .map((d) => ({
@@ -43,161 +77,176 @@ export default function PoulePagina() {
     }))
     .sort((a, b) => b.punten - a.punten || b.ingevuld - a.ingevuld);
 
-  const eersteVijfWedstrijden = wedstrijden.slice(0, 5);
+  const eersteWedstrijden = wedstrijden.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-green-800 text-white">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <div className="flex items-start justify-between">
+    <div className="min-h-screen bg-zinc-950 text-white">
+
+      {/* ── Header ── */}
+      <header className="bg-zinc-900 border-b border-zinc-800">
+        <div className="max-w-2xl mx-auto px-5 py-5">
+          <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300 font-medium transition-colors">
+            ← STEELBALLS
+          </Link>
+          <div className="mt-3 flex items-start justify-between gap-4">
             <div>
-              <Link href="/" className="text-green-300 text-sm hover:text-white transition-colors mb-2 block">
-                ← Terug naar home
-              </Link>
-              <h1 className="text-2xl font-bold">{poule.naam}</h1>
-              <p className="text-green-300 text-sm mt-1">
-                {poule.deelnemers.length} deelnemer{poule.deelnemers.length !== 1 ? "s" : ""}
+              <h1 className="text-2xl font-black text-white">{poule.naam}</h1>
+              <p className="text-zinc-500 text-sm mt-0.5">
+                {poule.deelnemers.length} deelnemer{poule.deelnemers.length !== 1 ? "s" : ""} · WK 2026
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-green-300 text-xs mb-1">Poule code</p>
-              <button
-                onClick={kopieerCode}
-                className="font-mono text-2xl font-bold tracking-widest bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors"
-              >
-                {code}
-              </button>
-              <p className="text-green-400 text-xs mt-1">
-                {gekopieerd ? "✓ Gekopieerd!" : "Klik om te kopiëren"}
-              </p>
-            </div>
+            <button
+              onClick={deelUitnodiging}
+              className="flex-shrink-0 flex items-center gap-2 bg-green-500 hover:bg-green-400 text-black font-bold text-sm px-4 py-2.5 rounded-xl transition-colors"
+            >
+              {gedeeld ? "✓ Link gekopieerd!" : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                  Nodig uit
+                </>
+              )}
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
-        {/* Jouw voorspellingen CTA */}
+      <main className="max-w-2xl mx-auto px-5 py-6 space-y-5">
+
+        {/* ── Jouw voorspellingen CTA ── */}
         {huidigDeelnemer && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex items-center justify-between">
-            <div>
-              <h2 className="font-bold text-gray-900">Jouw voorspellingen</h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                {huidigDeelnemer.voorspellingen.filter((v) => v.thuis !== null).length} van {aantalWedstrijden} wedstrijden ingevuld
-              </p>
-              <div className="mt-2 h-2 bg-gray-100 rounded-full w-48">
-                <div
-                  className="h-2 bg-green-500 rounded-full transition-all"
-                  style={{
-                    width: `${(huidigDeelnemer.voorspellingen.filter((v) => v.thuis !== null).length / aantalWedstrijden) * 100}%`,
-                  }}
-                />
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-0.5">Jouw voorspellingen</p>
+                <p className="text-white font-bold">
+                  {jouwIngevuld}
+                  <span className="text-zinc-500 font-normal"> van {aantalWedstrijden} ingevuld</span>
+                </p>
               </div>
+              <Link
+                href={`/poule/${code}/voorspellingen`}
+                className="bg-green-500 hover:bg-green-400 text-black font-bold text-sm px-5 py-2.5 rounded-xl transition-colors whitespace-nowrap"
+              >
+                {jouwIngevuld === 0 ? "Beginnen →" : jouwIngevuld === aantalWedstrijden ? "Bekijken →" : "Verder →"}
+              </Link>
             </div>
-            <Link
-              href={`/poule/${code}/voorspellingen`}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm whitespace-nowrap"
-            >
-              Vul voorspellingen in →
-            </Link>
+            <div className="h-1.5 bg-zinc-800 rounded-full">
+              <div
+                className="h-1.5 bg-green-500 rounded-full transition-all duration-500"
+                style={{ width: `${(jouwIngevuld / aantalWedstrijden) * 100}%` }}
+              />
+            </div>
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Stand */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900">Stand</h2>
-            </div>
-            <div className="divide-y divide-gray-50">
-              {stand.map((d, i) => (
-                <div
-                  key={d.id}
-                  className={`px-6 py-3.5 flex items-center gap-4 ${d.id === sessie?.deelnemerId ? "bg-green-50" : ""}`}
-                >
-                  <span className={`text-sm font-bold w-6 text-center ${i === 0 ? "text-yellow-500" : "text-gray-400"}`}>
-                    {i + 1}
-                  </span>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900 text-sm">
-                      {d.naam}
-                      {d.id === sessie?.deelnemerId && (
-                        <span className="ml-2 text-xs text-green-600 font-normal">(jij)</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-400">{d.ingevuld} voorspellingen</p>
-                  </div>
-                  <span className="text-lg font-bold text-gray-900">{d.punten}</span>
-                  <span className="text-xs text-gray-400">pt</span>
-                </div>
-              ))}
-              {stand.length === 0 && (
-                <p className="px-6 py-4 text-sm text-gray-400">Nog geen deelnemers.</p>
-              )}
-            </div>
+        {/* ── Stand ── */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-zinc-800">
+            <h2 className="font-bold text-white">Stand</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Punten worden bijgewerkt zodra uitslagen bekend zijn</p>
           </div>
-
-          {/* Eerstvolgende wedstrijden */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-bold text-gray-900">Eerste wedstrijden</h2>
-            </div>
-            <div className="divide-y divide-gray-50">
-              {eersteVijfWedstrijden.map((w) => (
-                <div key={w.id} className="px-6 py-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-400">{w.groep}</span>
-                    <span className="text-xs text-gray-400">
-                      {new Date(w.datum).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} · {w.tijd}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-base">{w.thuis.vlag}</span>
-                    <span className="text-sm font-medium text-gray-900">{w.thuis.naam}</span>
-                    <span className="text-xs text-gray-400 mx-1">vs</span>
-                    <span className="text-sm font-medium text-gray-900">{w.uit.naam}</span>
-                    <span className="text-base">{w.uit.vlag}</span>
+          <div className="divide-y divide-zinc-800">
+            {stand.map((d, i) => (
+              <div
+                key={d.id}
+                className={`px-5 py-4 flex items-center gap-3 ${d.id === sessie?.deelnemerId ? "bg-zinc-800/50" : ""}`}
+              >
+                <span className="text-lg w-7 text-center flex-shrink-0">
+                  {i < 3 ? MEDAILLES[i] : <span className="text-sm text-zinc-600 font-bold">{i + 1}</span>}
+                </span>
+                <Initialen naam={d.naam} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white text-sm truncate">
+                    {d.naam}
+                    {d.id === sessie?.deelnemerId && (
+                      <span className="ml-1.5 text-xs text-green-400 font-normal">jij</span>
+                    )}
+                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="h-1 w-24 bg-zinc-700 rounded-full">
+                      <div
+                        className="h-1 bg-zinc-400 rounded-full"
+                        style={{ width: `${(d.ingevuld / aantalWedstrijden) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-zinc-600">{d.ingevuld}/{aantalWedstrijden}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="px-6 py-3 border-t border-gray-100">
-              <Link
-                href={`/poule/${code}/voorspellingen`}
-                className="text-sm text-green-600 hover:text-green-700 font-medium"
-              >
-                Alle {aantalWedstrijden} wedstrijden voorspellen →
-              </Link>
-            </div>
+                <div className="text-right flex-shrink-0">
+                  <span className="text-xl font-black text-white">{d.punten}</span>
+                  <span className="text-xs text-zinc-600 ml-1">pt</span>
+                </div>
+              </div>
+            ))}
+            {stand.length === 0 && (
+              <p className="px-5 py-4 text-sm text-zinc-600">Nog geen deelnemers.</p>
+            )}
           </div>
         </div>
 
-        {/* Deelnemers */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="font-bold text-gray-900">Deelnemers</h2>
+        {/* ── Uitnodigen ── */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+          <h2 className="font-bold text-white mb-1">Vrienden uitnodigen</h2>
+          <p className="text-sm text-zinc-500 mb-4">
+            Deel de link of code — iedereen kan meedoen via de uitnodiging.
+          </p>
+          <div className="flex gap-3">
+            <div className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 font-mono text-sm text-zinc-300 tracking-widest">
+              {`/join/${code}`}
+            </div>
             <button
-              onClick={kopieerCode}
-              className="text-sm text-green-600 hover:text-green-700 font-medium"
+              onClick={deelUitnodiging}
+              className="bg-green-500 hover:bg-green-400 text-black font-bold text-sm px-5 rounded-xl transition-colors whitespace-nowrap"
             >
-              {gekopieerd ? "✓ Code gekopieerd!" : "Uitnodigen via code"}
+              {gedeeld ? "✓ Gekopieerd" : "Deel link"}
             </button>
           </div>
-          <div className="px-6 py-4 flex flex-wrap gap-2">
-            {poule.deelnemers.map((d: Deelnemer) => (
-              <span
-                key={d.id}
-                className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                  d.id === sessie?.deelnemerId
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {d.naam}
-              </span>
-            ))}
+        </div>
+
+        {/* ── Eerstvolgende wedstrijden ── */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+            <h2 className="font-bold text-white">Eerste wedstrijden</h2>
+            <Link href={`/poule/${code}/voorspellingen`} className="text-xs text-green-400 hover:text-green-300 font-medium">
+              Alle {aantalWedstrijden} →
+            </Link>
+          </div>
+          <div className="divide-y divide-zinc-800">
+            {eersteWedstrijden.map((w) => {
+              const vpThuis = huidigDeelnemer?.voorspellingen.find((v) => v.wedstrijdId === w.id);
+              const heeftVp = vpThuis?.thuis !== null && vpThuis?.uit !== null;
+              return (
+                <div key={w.id} className="px-5 py-3.5 flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="text-xs text-zinc-600 mb-1">{w.groep} · {new Date(w.datum).toLocaleDateString("nl-NL", { day: "numeric", month: "short" })} {w.tijd}</p>
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-white">
+                      <span>{w.thuis.vlag}</span>
+                      <span>{w.thuis.naam}</span>
+                      <span className="text-zinc-600 font-normal mx-1">vs</span>
+                      <span>{w.uit.naam}</span>
+                      <span>{w.uit.vlag}</span>
+                    </div>
+                  </div>
+                  {heeftVp ? (
+                    <div className="bg-zinc-800 px-3 py-1.5 rounded-lg text-sm font-bold text-white whitespace-nowrap">
+                      {vpThuis!.thuis} – {vpThuis!.uit}
+                    </div>
+                  ) : (
+                    <Link
+                      href={`/poule/${code}/voorspellingen`}
+                      className="text-xs text-zinc-600 hover:text-zinc-400 whitespace-nowrap"
+                    >
+                      Voorspel →
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
+
       </main>
     </div>
   );
