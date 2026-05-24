@@ -27,7 +27,7 @@ function LoginForm() {
     });
 
     if (error) {
-      setError("Er ging iets mis. Probeer het opnieuw.");
+      setError(error.message);
       setLoading(false);
       return;
     }
