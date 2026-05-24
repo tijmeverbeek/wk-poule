@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Component, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getPoule } from "@/lib/api";
@@ -8,6 +8,24 @@ import { berekenPunten } from "@/lib/storage";
 import { wedstrijden } from "@/lib/matches";
 import { createClient } from "@/lib/supabase/client";
 import { Poule } from "@/lib/types";
+
+class ErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { error: string | null }
+> {
+  state = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error: error.message }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-6">
+          <p className="text-red-400 text-sm break-all">Render fout: {this.state.error}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const MEDAILLES = ["🥇", "🥈", "🥉"];
 
@@ -27,7 +45,7 @@ function deelnemerNaam(d: { user: { gebruikersnaam: string | null; email: string
   return d.user.gebruikersnaam ?? d.user.email.split("@")[0];
 }
 
-export default function PoulePagina() {
+function PoulePagina() {
   const { code } = useParams<{ code: string }>();
   const router = useRouter();
   const [poule, setPoule] = useState<Poule | null>(null);
@@ -272,5 +290,13 @@ export default function PoulePagina() {
 
       </main>
     </div>
+  );
+}
+
+export default function PoulePaginaWrapper() {
+  return (
+    <ErrorBoundary>
+      <PoulePagina />
+    </ErrorBoundary>
   );
 }
