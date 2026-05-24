@@ -44,7 +44,7 @@ function LoginForm() {
     });
 
     if (error) {
-      setError(error.message);
+      setError("Er ging iets mis. Probeer het opnieuw.");
       setLoading(null);
       return;
     }
