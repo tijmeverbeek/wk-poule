@@ -1,107 +1,84 @@
-import { Team, Wedstrijd } from "./types";
+import { Wedstrijd } from "./types";
 
-const groepen: Record<string, Team[]> = {
-  A: [
-    { code: "NED", naam: "Nederland", vlag: "🇳🇱" },
-    { code: "SEN", naam: "Senegal", vlag: "🇸🇳" },
-    { code: "PER", naam: "Peru", vlag: "🇵🇪" },
-    { code: "NZL", naam: "Nieuw-Zeeland", vlag: "🇳🇿" },
-  ],
-  B: [
-    { code: "ARG", naam: "Argentinië", vlag: "🇦🇷" },
-    { code: "USA", naam: "VS", vlag: "🇺🇸" },
-    { code: "MEX", naam: "Mexico", vlag: "🇲🇽" },
-    { code: "MAR", naam: "Marokko", vlag: "🇲🇦" },
-  ],
-  C: [
-    { code: "BRA", naam: "Brazilië", vlag: "🇧🇷" },
-    { code: "CRO", naam: "Kroatië", vlag: "🇭🇷" },
-    { code: "SUI", naam: "Zwitserland", vlag: "🇨🇭" },
-    { code: "AUS", naam: "Australië", vlag: "🇦🇺" },
-  ],
-  D: [
-    { code: "GER", naam: "Duitsland", vlag: "🇩🇪" },
-    { code: "POR", naam: "Portugal", vlag: "🇵🇹" },
-    { code: "TUR", naam: "Turkije", vlag: "🇹🇷" },
-    { code: "ESP", naam: "Spanje", vlag: "🇪🇸" },
-  ],
-  E: [
-    { code: "ENG", naam: "Engeland", vlag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-    { code: "URU", naam: "Uruguay", vlag: "🇺🇾" },
-    { code: "SRB", naam: "Servië", vlag: "🇷🇸" },
-    { code: "CIV", naam: "Ivoorkust", vlag: "🇨🇮" },
-  ],
-  F: [
-    { code: "FRA", naam: "Frankrijk", vlag: "🇫🇷" },
-    { code: "NGA", naam: "Nigeria", vlag: "🇳🇬" },
-    { code: "COL", naam: "Colombia", vlag: "🇨🇴" },
-    { code: "ECU", naam: "Ecuador", vlag: "🇪🇨" },
-  ],
-  G: [
-    { code: "BEL", naam: "België", vlag: "🇧🇪" },
-    { code: "JPN", naam: "Japan", vlag: "🇯🇵" },
-    { code: "KOR", naam: "Zuid-Korea", vlag: "🇰🇷" },
-    { code: "CHI", naam: "Chili", vlag: "🇨🇱" },
-  ],
-  H: [
-    { code: "MEX", naam: "Mexico", vlag: "🇲🇽" },
-    { code: "POL", naam: "Polen", vlag: "🇵🇱" },
-    { code: "CMR", naam: "Kameroen", vlag: "🇨🇲" },
-    { code: "QAT", naam: "Qatar", vlag: "🇶🇦" },
-  ],
-};
-
-// Per ronde: [dag offset van 11 juni, tijd]
-const schema: [number, string][][] = [
-  // Ronde 1 (juni 11–14)
-  [[0, "18:00"], [0, "21:00"], [1, "18:00"], [1, "21:00"], [2, "18:00"], [2, "21:00"], [3, "18:00"], [3, "21:00"]],
-  // Ronde 2 (juni 17–20)
-  [[6, "18:00"], [6, "21:00"], [7, "18:00"], [7, "21:00"], [8, "18:00"], [8, "21:00"], [9, "18:00"], [9, "21:00"]],
-  // Ronde 3 (juni 23–26, gelijktijdig)
-  [[12, "21:00"], [12, "21:00"], [13, "21:00"], [13, "21:00"], [14, "21:00"], [14, "21:00"], [15, "21:00"], [15, "21:00"]],
+export const wedstrijden: Wedstrijd[] = [
+  { id: "537327", thuis: { code: "MEX", naam: "Mexico", vlag: "🇲🇽" }, uit: { code: "RSA", naam: "Zuid-Afrika", vlag: "🇿🇦" }, datum: "2026-06-11", tijd: "21:00", groep: "Groep A", fase: "groepsfase" },
+  { id: "537328", thuis: { code: "KOR", naam: "Zuid-Korea", vlag: "🇰🇷" }, uit: { code: "CZE", naam: "Tsjechië", vlag: "🇨🇿" }, datum: "2026-06-12", tijd: "04:00", groep: "Groep A", fase: "groepsfase" },
+  { id: "537333", thuis: { code: "CAN", naam: "Canada", vlag: "🇨🇦" }, uit: { code: "BIH", naam: "Bosnië", vlag: "🇧🇦" }, datum: "2026-06-12", tijd: "21:00", groep: "Groep B", fase: "groepsfase" },
+  { id: "537345", thuis: { code: "USA", naam: "VS", vlag: "🇺🇸" }, uit: { code: "PAR", naam: "Paraguay", vlag: "🇵🇾" }, datum: "2026-06-13", tijd: "03:00", groep: "Groep D", fase: "groepsfase" },
+  { id: "537334", thuis: { code: "QAT", naam: "Qatar", vlag: "🇶🇦" }, uit: { code: "SUI", naam: "Zwitserland", vlag: "🇨🇭" }, datum: "2026-06-13", tijd: "21:00", groep: "Groep B", fase: "groepsfase" },
+  { id: "537339", thuis: { code: "BRA", naam: "Brazilië", vlag: "🇧🇷" }, uit: { code: "MAR", naam: "Marokko", vlag: "🇲🇦" }, datum: "2026-06-14", tijd: "00:00", groep: "Groep C", fase: "groepsfase" },
+  { id: "537340", thuis: { code: "HAI", naam: "Haïti", vlag: "🇭🇹" }, uit: { code: "SCO", naam: "Schotland", vlag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" }, datum: "2026-06-14", tijd: "03:00", groep: "Groep C", fase: "groepsfase" },
+  { id: "537346", thuis: { code: "AUS", naam: "Australië", vlag: "🇦🇺" }, uit: { code: "TUR", naam: "Turkije", vlag: "🇹🇷" }, datum: "2026-06-14", tijd: "06:00", groep: "Groep D", fase: "groepsfase" },
+  { id: "537351", thuis: { code: "GER", naam: "Duitsland", vlag: "🇩🇪" }, uit: { code: "CUR", naam: "Curaçao", vlag: "🇨🇼" }, datum: "2026-06-14", tijd: "19:00", groep: "Groep E", fase: "groepsfase" },
+  { id: "537357", thuis: { code: "NED", naam: "Nederland", vlag: "🇳🇱" }, uit: { code: "JPN", naam: "Japan", vlag: "🇯🇵" }, datum: "2026-06-14", tijd: "22:00", groep: "Groep F", fase: "groepsfase" },
+  { id: "537352", thuis: { code: "CIV", naam: "Ivoorkust", vlag: "🇨🇮" }, uit: { code: "ECU", naam: "Ecuador", vlag: "🇪🇨" }, datum: "2026-06-15", tijd: "01:00", groep: "Groep E", fase: "groepsfase" },
+  { id: "537358", thuis: { code: "SWE", naam: "Zweden", vlag: "🇸🇪" }, uit: { code: "TUN", naam: "Tunesië", vlag: "🇹🇳" }, datum: "2026-06-15", tijd: "04:00", groep: "Groep F", fase: "groepsfase" },
+  { id: "537369", thuis: { code: "ESP", naam: "Spanje", vlag: "🇪🇸" }, uit: { code: "CPV", naam: "Kaapverdië", vlag: "🇨🇻" }, datum: "2026-06-15", tijd: "18:00", groep: "Groep H", fase: "groepsfase" },
+  { id: "537363", thuis: { code: "BEL", naam: "België", vlag: "🇧🇪" }, uit: { code: "EGY", naam: "Egypte", vlag: "🇪🇬" }, datum: "2026-06-15", tijd: "21:00", groep: "Groep G", fase: "groepsfase" },
+  { id: "537370", thuis: { code: "KSA", naam: "Saudi-Arabië", vlag: "🇸🇦" }, uit: { code: "URY", naam: "Uruguay", vlag: "🇺🇾" }, datum: "2026-06-16", tijd: "00:00", groep: "Groep H", fase: "groepsfase" },
+  { id: "537364", thuis: { code: "IRN", naam: "Iran", vlag: "🇮🇷" }, uit: { code: "NZL", naam: "Nieuw-Zeeland", vlag: "🇳🇿" }, datum: "2026-06-16", tijd: "03:00", groep: "Groep G", fase: "groepsfase" },
+  { id: "537391", thuis: { code: "FRA", naam: "Frankrijk", vlag: "🇫🇷" }, uit: { code: "SEN", naam: "Senegal", vlag: "🇸🇳" }, datum: "2026-06-16", tijd: "21:00", groep: "Groep I", fase: "groepsfase" },
+  { id: "537392", thuis: { code: "IRQ", naam: "Irak", vlag: "🇮🇶" }, uit: { code: "NOR", naam: "Noorwegen", vlag: "🇳🇴" }, datum: "2026-06-17", tijd: "00:00", groep: "Groep I", fase: "groepsfase" },
+  { id: "537397", thuis: { code: "ARG", naam: "Argentinië", vlag: "🇦🇷" }, uit: { code: "ALG", naam: "Algerije", vlag: "🇩🇿" }, datum: "2026-06-17", tijd: "03:00", groep: "Groep J", fase: "groepsfase" },
+  { id: "537398", thuis: { code: "AUT", naam: "Oostenrijk", vlag: "🇦🇹" }, uit: { code: "JOR", naam: "Jordanië", vlag: "🇯🇴" }, datum: "2026-06-17", tijd: "06:00", groep: "Groep J", fase: "groepsfase" },
+  { id: "537403", thuis: { code: "POR", naam: "Portugal", vlag: "🇵🇹" }, uit: { code: "COD", naam: "Congo DR", vlag: "🇨🇩" }, datum: "2026-06-17", tijd: "19:00", groep: "Groep K", fase: "groepsfase" },
+  { id: "537409", thuis: { code: "ENG", naam: "Engeland", vlag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" }, uit: { code: "CRO", naam: "Kroatië", vlag: "🇭🇷" }, datum: "2026-06-17", tijd: "22:00", groep: "Groep L", fase: "groepsfase" },
+  { id: "537410", thuis: { code: "GHA", naam: "Ghana", vlag: "🇬🇭" }, uit: { code: "PAN", naam: "Panama", vlag: "🇵🇦" }, datum: "2026-06-18", tijd: "01:00", groep: "Groep L", fase: "groepsfase" },
+  { id: "537404", thuis: { code: "UZB", naam: "Oezbekistan", vlag: "🇺🇿" }, uit: { code: "COL", naam: "Colombia", vlag: "🇨🇴" }, datum: "2026-06-18", tijd: "04:00", groep: "Groep K", fase: "groepsfase" },
+  { id: "537329", thuis: { code: "CZE", naam: "Tsjechië", vlag: "🇨🇿" }, uit: { code: "RSA", naam: "Zuid-Afrika", vlag: "🇿🇦" }, datum: "2026-06-18", tijd: "18:00", groep: "Groep A", fase: "groepsfase" },
+  { id: "537335", thuis: { code: "SUI", naam: "Zwitserland", vlag: "🇨🇭" }, uit: { code: "BIH", naam: "Bosnië", vlag: "🇧🇦" }, datum: "2026-06-18", tijd: "21:00", groep: "Groep B", fase: "groepsfase" },
+  { id: "537336", thuis: { code: "CAN", naam: "Canada", vlag: "🇨🇦" }, uit: { code: "QAT", naam: "Qatar", vlag: "🇶🇦" }, datum: "2026-06-19", tijd: "00:00", groep: "Groep B", fase: "groepsfase" },
+  { id: "537330", thuis: { code: "MEX", naam: "Mexico", vlag: "🇲🇽" }, uit: { code: "KOR", naam: "Zuid-Korea", vlag: "🇰🇷" }, datum: "2026-06-19", tijd: "03:00", groep: "Groep A", fase: "groepsfase" },
+  { id: "537348", thuis: { code: "USA", naam: "VS", vlag: "🇺🇸" }, uit: { code: "AUS", naam: "Australië", vlag: "🇦🇺" }, datum: "2026-06-19", tijd: "21:00", groep: "Groep D", fase: "groepsfase" },
+  { id: "537342", thuis: { code: "SCO", naam: "Schotland", vlag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" }, uit: { code: "MAR", naam: "Marokko", vlag: "🇲🇦" }, datum: "2026-06-20", tijd: "00:00", groep: "Groep C", fase: "groepsfase" },
+  { id: "537341", thuis: { code: "BRA", naam: "Brazilië", vlag: "🇧🇷" }, uit: { code: "HAI", naam: "Haïti", vlag: "🇭🇹" }, datum: "2026-06-20", tijd: "02:30", groep: "Groep C", fase: "groepsfase" },
+  { id: "537347", thuis: { code: "TUR", naam: "Turkije", vlag: "🇹🇷" }, uit: { code: "PAR", naam: "Paraguay", vlag: "🇵🇾" }, datum: "2026-06-20", tijd: "05:00", groep: "Groep D", fase: "groepsfase" },
+  { id: "537359", thuis: { code: "NED", naam: "Nederland", vlag: "🇳🇱" }, uit: { code: "SWE", naam: "Zweden", vlag: "🇸🇪" }, datum: "2026-06-20", tijd: "19:00", groep: "Groep F", fase: "groepsfase" },
+  { id: "537353", thuis: { code: "GER", naam: "Duitsland", vlag: "🇩🇪" }, uit: { code: "CIV", naam: "Ivoorkust", vlag: "🇨🇮" }, datum: "2026-06-20", tijd: "22:00", groep: "Groep E", fase: "groepsfase" },
+  { id: "537354", thuis: { code: "ECU", naam: "Ecuador", vlag: "🇪🇨" }, uit: { code: "CUR", naam: "Curaçao", vlag: "🇨🇼" }, datum: "2026-06-21", tijd: "02:00", groep: "Groep E", fase: "groepsfase" },
+  { id: "537360", thuis: { code: "TUN", naam: "Tunesië", vlag: "🇹🇳" }, uit: { code: "JPN", naam: "Japan", vlag: "🇯🇵" }, datum: "2026-06-21", tijd: "06:00", groep: "Groep F", fase: "groepsfase" },
+  { id: "537371", thuis: { code: "ESP", naam: "Spanje", vlag: "🇪🇸" }, uit: { code: "KSA", naam: "Saudi-Arabië", vlag: "🇸🇦" }, datum: "2026-06-21", tijd: "18:00", groep: "Groep H", fase: "groepsfase" },
+  { id: "537365", thuis: { code: "BEL", naam: "België", vlag: "🇧🇪" }, uit: { code: "IRN", naam: "Iran", vlag: "🇮🇷" }, datum: "2026-06-21", tijd: "21:00", groep: "Groep G", fase: "groepsfase" },
+  { id: "537372", thuis: { code: "URY", naam: "Uruguay", vlag: "🇺🇾" }, uit: { code: "CPV", naam: "Kaapverdië", vlag: "🇨🇻" }, datum: "2026-06-22", tijd: "00:00", groep: "Groep H", fase: "groepsfase" },
+  { id: "537366", thuis: { code: "NZL", naam: "Nieuw-Zeeland", vlag: "🇳🇿" }, uit: { code: "EGY", naam: "Egypte", vlag: "🇪🇬" }, datum: "2026-06-22", tijd: "03:00", groep: "Groep G", fase: "groepsfase" },
+  { id: "537399", thuis: { code: "ARG", naam: "Argentinië", vlag: "🇦🇷" }, uit: { code: "AUT", naam: "Oostenrijk", vlag: "🇦🇹" }, datum: "2026-06-22", tijd: "19:00", groep: "Groep J", fase: "groepsfase" },
+  { id: "537393", thuis: { code: "FRA", naam: "Frankrijk", vlag: "🇫🇷" }, uit: { code: "IRQ", naam: "Irak", vlag: "🇮🇶" }, datum: "2026-06-22", tijd: "23:00", groep: "Groep I", fase: "groepsfase" },
+  { id: "537394", thuis: { code: "NOR", naam: "Noorwegen", vlag: "🇳🇴" }, uit: { code: "SEN", naam: "Senegal", vlag: "🇸🇳" }, datum: "2026-06-23", tijd: "02:00", groep: "Groep I", fase: "groepsfase" },
+  { id: "537400", thuis: { code: "JOR", naam: "Jordanië", vlag: "🇯🇴" }, uit: { code: "ALG", naam: "Algerije", vlag: "🇩🇿" }, datum: "2026-06-23", tijd: "05:00", groep: "Groep J", fase: "groepsfase" },
+  { id: "537405", thuis: { code: "POR", naam: "Portugal", vlag: "🇵🇹" }, uit: { code: "UZB", naam: "Oezbekistan", vlag: "🇺🇿" }, datum: "2026-06-23", tijd: "19:00", groep: "Groep K", fase: "groepsfase" },
+  { id: "537411", thuis: { code: "ENG", naam: "Engeland", vlag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" }, uit: { code: "GHA", naam: "Ghana", vlag: "🇬🇭" }, datum: "2026-06-23", tijd: "22:00", groep: "Groep L", fase: "groepsfase" },
+  { id: "537412", thuis: { code: "PAN", naam: "Panama", vlag: "🇵🇦" }, uit: { code: "CRO", naam: "Kroatië", vlag: "🇭🇷" }, datum: "2026-06-24", tijd: "01:00", groep: "Groep L", fase: "groepsfase" },
+  { id: "537406", thuis: { code: "COL", naam: "Colombia", vlag: "🇨🇴" }, uit: { code: "COD", naam: "Congo DR", vlag: "🇨🇩" }, datum: "2026-06-24", tijd: "04:00", groep: "Groep K", fase: "groepsfase" },
+  { id: "537337", thuis: { code: "SUI", naam: "Zwitserland", vlag: "🇨🇭" }, uit: { code: "CAN", naam: "Canada", vlag: "🇨🇦" }, datum: "2026-06-24", tijd: "21:00", groep: "Groep B", fase: "groepsfase" },
+  { id: "537338", thuis: { code: "BIH", naam: "Bosnië", vlag: "🇧🇦" }, uit: { code: "QAT", naam: "Qatar", vlag: "🇶🇦" }, datum: "2026-06-24", tijd: "21:00", groep: "Groep B", fase: "groepsfase" },
+  { id: "537344", thuis: { code: "MAR", naam: "Marokko", vlag: "🇲🇦" }, uit: { code: "HAI", naam: "Haïti", vlag: "🇭🇹" }, datum: "2026-06-25", tijd: "00:00", groep: "Groep C", fase: "groepsfase" },
+  { id: "537343", thuis: { code: "SCO", naam: "Schotland", vlag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" }, uit: { code: "BRA", naam: "Brazilië", vlag: "🇧🇷" }, datum: "2026-06-25", tijd: "00:00", groep: "Groep C", fase: "groepsfase" },
+  { id: "537331", thuis: { code: "CZE", naam: "Tsjechië", vlag: "🇨🇿" }, uit: { code: "MEX", naam: "Mexico", vlag: "🇲🇽" }, datum: "2026-06-25", tijd: "03:00", groep: "Groep A", fase: "groepsfase" },
+  { id: "537332", thuis: { code: "RSA", naam: "Zuid-Afrika", vlag: "🇿🇦" }, uit: { code: "KOR", naam: "Zuid-Korea", vlag: "🇰🇷" }, datum: "2026-06-25", tijd: "03:00", groep: "Groep A", fase: "groepsfase" },
+  { id: "537355", thuis: { code: "ECU", naam: "Ecuador", vlag: "🇪🇨" }, uit: { code: "GER", naam: "Duitsland", vlag: "🇩🇪" }, datum: "2026-06-25", tijd: "22:00", groep: "Groep E", fase: "groepsfase" },
+  { id: "537356", thuis: { code: "CUR", naam: "Curaçao", vlag: "🇨🇼" }, uit: { code: "CIV", naam: "Ivoorkust", vlag: "🇨🇮" }, datum: "2026-06-25", tijd: "22:00", groep: "Groep E", fase: "groepsfase" },
+  { id: "537361", thuis: { code: "TUN", naam: "Tunesië", vlag: "🇹🇳" }, uit: { code: "NED", naam: "Nederland", vlag: "🇳🇱" }, datum: "2026-06-26", tijd: "01:00", groep: "Groep F", fase: "groepsfase" },
+  { id: "537362", thuis: { code: "JPN", naam: "Japan", vlag: "🇯🇵" }, uit: { code: "SWE", naam: "Zweden", vlag: "🇸🇪" }, datum: "2026-06-26", tijd: "01:00", groep: "Groep F", fase: "groepsfase" },
+  { id: "537349", thuis: { code: "TUR", naam: "Turkije", vlag: "🇹🇷" }, uit: { code: "USA", naam: "VS", vlag: "🇺🇸" }, datum: "2026-06-26", tijd: "04:00", groep: "Groep D", fase: "groepsfase" },
+  { id: "537350", thuis: { code: "PAR", naam: "Paraguay", vlag: "🇵🇾" }, uit: { code: "AUS", naam: "Australië", vlag: "🇦🇺" }, datum: "2026-06-26", tijd: "04:00", groep: "Groep D", fase: "groepsfase" },
+  { id: "537395", thuis: { code: "NOR", naam: "Noorwegen", vlag: "🇳🇴" }, uit: { code: "FRA", naam: "Frankrijk", vlag: "🇫🇷" }, datum: "2026-06-26", tijd: "21:00", groep: "Groep I", fase: "groepsfase" },
+  { id: "537396", thuis: { code: "SEN", naam: "Senegal", vlag: "🇸🇳" }, uit: { code: "IRQ", naam: "Irak", vlag: "🇮🇶" }, datum: "2026-06-26", tijd: "21:00", groep: "Groep I", fase: "groepsfase" },
+  { id: "537373", thuis: { code: "URY", naam: "Uruguay", vlag: "🇺🇾" }, uit: { code: "ESP", naam: "Spanje", vlag: "🇪🇸" }, datum: "2026-06-27", tijd: "02:00", groep: "Groep H", fase: "groepsfase" },
+  { id: "537374", thuis: { code: "CPV", naam: "Kaapverdië", vlag: "🇨🇻" }, uit: { code: "KSA", naam: "Saudi-Arabië", vlag: "🇸🇦" }, datum: "2026-06-27", tijd: "02:00", groep: "Groep H", fase: "groepsfase" },
+  { id: "537367", thuis: { code: "NZL", naam: "Nieuw-Zeeland", vlag: "🇳🇿" }, uit: { code: "BEL", naam: "België", vlag: "🇧🇪" }, datum: "2026-06-27", tijd: "05:00", groep: "Groep G", fase: "groepsfase" },
+  { id: "537368", thuis: { code: "EGY", naam: "Egypte", vlag: "🇪🇬" }, uit: { code: "IRN", naam: "Iran", vlag: "🇮🇷" }, datum: "2026-06-27", tijd: "05:00", groep: "Groep G", fase: "groepsfase" },
+  { id: "537413", thuis: { code: "PAN", naam: "Panama", vlag: "🇵🇦" }, uit: { code: "ENG", naam: "Engeland", vlag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" }, datum: "2026-06-27", tijd: "23:00", groep: "Groep L", fase: "groepsfase" },
+  { id: "537414", thuis: { code: "CRO", naam: "Kroatië", vlag: "🇭🇷" }, uit: { code: "GHA", naam: "Ghana", vlag: "🇬🇭" }, datum: "2026-06-27", tijd: "23:00", groep: "Groep L", fase: "groepsfase" },
+  { id: "537407", thuis: { code: "COL", naam: "Colombia", vlag: "🇨🇴" }, uit: { code: "POR", naam: "Portugal", vlag: "🇵🇹" }, datum: "2026-06-28", tijd: "01:30", groep: "Groep K", fase: "groepsfase" },
+  { id: "537408", thuis: { code: "COD", naam: "Congo DR", vlag: "🇨🇩" }, uit: { code: "UZB", naam: "Oezbekistan", vlag: "🇺🇿" }, datum: "2026-06-28", tijd: "01:30", groep: "Groep K", fase: "groepsfase" },
+  { id: "537401", thuis: { code: "JOR", naam: "Jordanië", vlag: "🇯🇴" }, uit: { code: "ARG", naam: "Argentinië", vlag: "🇦🇷" }, datum: "2026-06-28", tijd: "04:00", groep: "Groep J", fase: "groepsfase" },
+  { id: "537402", thuis: { code: "ALG", naam: "Algerije", vlag: "🇩🇿" }, uit: { code: "AUT", naam: "Oostenrijk", vlag: "🇦🇹" }, datum: "2026-06-28", tijd: "04:00", groep: "Groep J", fase: "groepsfase" },
 ];
-
-function datumVanOffset(offsetDagen: number): string {
-  const start = new Date("2026-06-11");
-  start.setDate(start.getDate() + offsetDagen);
-  return start.toISOString().split("T")[0];
-}
-
-function genereerMatches(): Wedstrijd[] {
-  const matches: Wedstrijd[] = [];
-  const groepLetters = Object.keys(groepen);
-
-  groepLetters.forEach((groep, gi) => {
-    const teams = groepen[groep];
-    // 6 wedstrijden per groep: ronde-robin
-    const paren: [number, number][] = [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]];
-
-    paren.forEach(([a, b], matchIndex) => {
-      const ronde = Math.floor(matchIndex / 2);
-      const slot = ronde === 2 ? matchIndex - 4 : matchIndex % 2;
-      const [dagOffset, tijd] = schema[ronde][gi];
-
-      matches.push({
-        id: `${groep}${matchIndex + 1}`,
-        thuis: teams[a],
-        uit: teams[b],
-        datum: datumVanOffset(dagOffset),
-        tijd,
-        groep: `Groep ${groep}`,
-        fase: "groepsfase",
-      });
-    });
-  });
-
-  return matches.sort((a, b) => `${a.datum}${a.tijd}`.localeCompare(`${b.datum}${b.tijd}`));
-}
-
-export const wedstrijden: Wedstrijd[] = genereerMatches();
 
 export function getWedstrijd(id: string): Wedstrijd | undefined {
   return wedstrijden.find((w) => w.id === id);
 }
 
 export function getGroepen(): string[] {
-  return [...new Set(wedstrijden.map((w) => w.groep))].sort();
+  return [...new Set(wedstrijden.map((w) => w.groep))];
 }
